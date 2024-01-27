@@ -37,7 +37,7 @@ def formatted_display(label, value, unit):
 Minput = st.sidebar.selectbox('Input-Month',['2024-01','2024-02','2024-03','2024-04','2024-05','2024-06',
                                              '2024-07','2024-08','2024-09','2024-10','2024-11','2024-12'])
 Winput = st.sidebar.selectbox('Input-Week', [1,2,3,4,5])
-Customer=st.sidebar.selectbox('Input-Customer', ['Valeo','TBKK','Electrolux','Homexpert','Koshin'])
+Customer=st.sidebar.selectbox('Input-Customer', ['Valeo','TBKK','Electrolux','Homexpert','Koshin','MASS'])
 Process = st.sidebar.selectbox('Input-Process',['DC','FN','SB','T5','MC','QC','Movement'])
 
 #######################################################
@@ -115,9 +115,13 @@ DataMerges['Part_No']=DataMerges['Part_No'].astype(str)
 DataMerges=pd.merge(DataMerges,EndCheck,on='Part_No',how='left')
 DataMerges=pd.merge(DataMerges,Cust,on='Part_No',how='outer')
 DataMerges['Customer']=DataMerges['Customer'].fillna('NoN')
-DataMerges=DataMerges[DataMerges['Customer'].str.contains(Customer)]
-# DataMerges=DataMerges[~DataMerges['Machine'].str.contains('KAYAMA')]  
-# DataMerges  
+######################################################
+DataMerges['Customer']=DataMerges['Customer'].fillna('NoN')
+if Customer=='MASS':
+    DataMerges = DataMerges[DataMerges['Customer'].isin(['Valeo', 'TBKK', 'Electrolux','Homexpert'])]
+else:
+    DataMerges=DataMerges[DataMerges['Customer'].str.contains(Customer)]
+
 ##################### DC ##################################
 DCData=DataMerges
 DCData.columns = [str(col) for col in DCData.columns]

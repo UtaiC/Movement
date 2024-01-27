@@ -90,31 +90,21 @@ start_week, end_week = get_week_range_for_month(year, month)
 ########################## Read File #####################
 st.write('---')
 ############## Read Files ##############
-Cust=pd.read_excel('Customer.xlsx')
+Cust="https://docs.google.com/spreadsheets/d/19iyTfyXhd2U9Sm-K_9b7etC6h0v_SbQ8/export?format=xlsx"
+Cust=pd.read_excel(Cust)
 # Function to load dataframes from the Excel file
 @st.cache_data
 def load_dataframes(sheet_names):
-    # url = "https://docs.google.com/spreadsheets/d/1QBYKcKy5feKnWfth4L1XfnbUx9EFjg_L/export?format=xlsx"
-    file="Production-2024.xlsx"
+    url = "https://docs.google.com/spreadsheets/d/1pbzO4YI-TkW3AO6yssJgHO9F3FwWb9Rs/export?format=xlsx"
+    # file="Production-2024.xlsx"
     dataframes = {}
     for sheet_name in sheet_names:
-        df = pd.read_excel(file, header=7, engine='openpyxl', sheet_name=sheet_name)
+        df = pd.read_excel(url, header=7, engine='openpyxl', sheet_name=sheet_name)
         dataframes[sheet_name] = df
     return dataframes
 all_sheet_names = [str(week) for week in range(start_week,end_week+1)]
 dataframes = load_dataframes(all_sheet_names)
 dataframes = {int(week): df for week, df in dataframes.items()}
-# ############## Function Month #######################################
-#     dataframes = {}
-#     for sheet_name in sheet_names:
-#         df = pd.read_excel(file, header=7, engine='openpyxl', sheet_name=sheet_name)
-#         dataframes[sheet_name] = df
-#     return dataframes
-############## Range Month #################################
-# all_sheet_names = [str(week) for week in range(start_week,end_week+1)]
-# dataframes = load_dataframes(all_sheet_names)
-# dataframes = {int(week): df for week, df in dataframes.items()}
-#################### Weekly Data ##########################
 DataMerges=dataframes[Winput]
 EndCheck=dataframes[Winput+1]
 EndCheck=EndCheck[['Part no.','Beginning Balance','Beginning Balance.1','Beginning Balance.2','Beginning Balance.3',
@@ -128,13 +118,6 @@ EndCheck=EndCheck.rename(columns={'Part no.':'Part_No',
                                   'Beginning Balance.5':'MCEnd',
                                   'Beginning Balance.6':'QCEnd'})
 EndCheck['FNEnd']=EndCheck['FNEnd-1']+EndCheck['FNEnd-2']
-################ Maergs Sheet ##################################
-# sheet_numbers_to_merge = range(start_week, end_week+1) 
-# dfs_to_merge = [dataframes[num] for num in sheet_numbers_to_merge]
-# # Merge the selected dataframes into a single dataframe
-# merged_df = pd.concat(dfs_to_merge, ignore_index=True)  # Concatenate and reset index
-# DataMerges=merged_df
-# DataMerges=DataMerges.fillna(0)
 DataMerges=DataMerges.rename(columns={'Part no.':'Part_No','Itemes':'Part_No'})
 values_to_exclude = ['nan', 'TBKK','Itemes','KOSHIN', 'ELECTROLUX', 'HOME EXPERT','Home Expert',0]
 mask = ~DataMerges['Part_No'].isin(values_to_exclude)

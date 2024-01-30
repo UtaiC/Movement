@@ -8,6 +8,7 @@ import glob
 from datetime import datetime, timedelta
 import datetime
 import calendar
+# import plotly.graph_objs as go
 ############## Logo and Format ############################
 Logo=Image.open('SIM-LOGO-02.jpg')
 st.image(Logo,width=700)
@@ -553,9 +554,7 @@ if Process=='Movement-FN':
     FNSUMDATA  = pd.DataFrame(FNSUMDATA)
     FNSUMDATA .index += 1
     FNSUMDATA['Quantity'] = FNSUMDATA['Quantity'].map('{:,.0f}'.format)
-    st.table(FNSUMDATA )
-    st.write('BM Gap/Loss')
-    
+    st.table(FNSUMDATA ) 
     ################# To Excel ############################
     name='FN-Movement @ Week-'
     week=str(Winput)
@@ -633,7 +632,6 @@ if Process=='Movement-SB':
     SBSUMDATA .index += 1
     SBSUMDATA['Quantity'] = SBSUMDATA['Quantity'].map('{:,.0f}'.format)
     st.table(SBSUMDATA )
-    st.write('BM Gap/Loss')
     ################# To Excel ############################
     name='SB-Movement @ Week-'
     week=str(Winput)

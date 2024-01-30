@@ -8,7 +8,6 @@ import glob
 from datetime import datetime, timedelta
 import datetime
 import calendar
-import plotly.graph_objs as go
 ############## Logo and Format ############################
 Logo=Image.open('SIM-LOGO-02.jpg')
 st.image(Logo,width=700)

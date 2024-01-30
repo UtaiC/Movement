@@ -8,6 +8,7 @@ import glob
 from datetime import datetime, timedelta
 import datetime
 import calendar
+import plotly.graph_objs as go
 ############## Logo and Format ############################
 Logo=Image.open('SIM-LOGO-02.jpg')
 st.image(Logo,width=700)
@@ -38,7 +39,13 @@ Minput = st.sidebar.selectbox('Input-Month',['2024-01','2024-02','2024-03','2024
                                              '2024-07','2024-08','2024-09','2024-10','2024-11','2024-12'])
 Winput = st.sidebar.selectbox('Input-Week', [1,2,3,4,5])
 Customer=st.sidebar.selectbox('Input-Customer', ['Valeo','TBKK','Electrolux','Homexpert','Koshin','MASS'])
-Process = st.sidebar.selectbox('Input-Process',['DC','FN','SB','T5','MC','QC','Movement'])
+Process = st.sidebar.selectbox('Input-Process',['DC','FN','SB','T5','MC','QC',
+                                                'Movement-DC',
+                                                'Movement-FN',
+                                                'Movement-SB',
+                                                'Movement-MC',
+                                                'Movement-QC',
+                                                ])
 
 #######################################################
 def generate_weeks(year):
@@ -167,8 +174,8 @@ if Process=='DC':
     st.write(' DC analysis @', Minput)
     st.write('Week Data: Week@',Winput)
     DCData=DCData.fillna(0)
+    DCData.set_index('Part_No',inplace=True)
     DCData
-    
     formatted_display('Begining Stock',round(SUMBeg),'Pcs')
     formatted_display('Production',round(DCPcs),'Pcs')
     formatted_display('Total Stock',round(SUMTT),'Pcs')
@@ -225,6 +232,7 @@ if Process=='FN':
     st.write(' FN analysis @', Minput)
     st.write('Week Data: Week@',Winput)
     FNData=FNData.fillna(0)
+    FNData.set_index('Part_No',inplace=True)
     FNData
     formatted_display('Begining Stock',round(SUMBeg),'Pcs')
     formatted_display('Production',round(FNPcs),'Pcs')
@@ -289,6 +297,7 @@ if Process=='SB':
     st.write(' SB analysis @', Minput)
     st.write('Week Data: Week@',Winput)
     SBData=SBData.fillna(0)
+    SBData.set_index('Part_No',inplace=True)
     SBData
     
     formatted_display('Begining Stock',round(SUMBeg),'Pcs')
@@ -340,6 +349,7 @@ if Process=='T5':
     st.write(' T5 analysis @', Minput)
     st.write('Week Data: Week@',Winput)
     T5Data=T5Data.fillna(0)
+    T5Data.set_index('Part_No',inplace=True)
     T5Data
     formatted_display('Begining Stock',round(SUMBeg),'Pcs')
     formatted_display('Production',round(T5Pcs),'Pcs')
@@ -390,6 +400,7 @@ if Process=='MC':
     st.write(' MC analysis @', Minput)
     st.write('Week Data: Week@',Winput)
     MCData=MCData.fillna(0)
+    MCData.set_index('Part_No',inplace=True)
     MCData
     formatted_display('Begining Stock',round(SUMBeg),'Pcs')
     formatted_display('Production',round(MCPcs),'Pcs')
@@ -449,6 +460,7 @@ if Process=='QC':
     st.write(' QC analysis @', Minput)
     st.write('Week Data: Week@',Winput)
     QCData=QCData.fillna(0)
+    QCData.set_index('Part_No',inplace=True)
     QCData
     formatted_display('Begining Stock',round(SUMBeg),'Pcs')
     formatted_display('MC-QC Pcs',round(QCMC),'Pcs')
@@ -458,11 +470,11 @@ if Process=='QC':
     formatted_display('Ending Stock',round(SUMEnd),'Pcs')
     formatted_display('Movement Stock',round(QCMove),'Pcs')
 ################## Gap Movement ##########################
-if Process=='Movement':
-    st.subheader('Movement Gap Analysis')
-    st.write('Weekly Data Summarize @week',Winput)
+if Process=='Movement-DC':
+    st.subheader('Movement DC-Gap Analysis')
+    st.write('DC Weekly Data Summarize @week',Winput)
     # st.write('---')
-############### DC #########################
+############### DC-Movement #########################
     FNProd=FNData[['Part_No','Prod-Pcs']]
     DCMove=DCData[['Part_No','DC-Move']]
     DCGapCheck=pd.merge(FNProd,DCMove,on='Part_No',how='left')
@@ -475,11 +487,13 @@ if Process=='Movement':
     formatted_df = format_dataframe_columns(DCGapCheck)
     st.dataframe(formatted_df)
     ####################
-    DCSUM=DCGapCheck['BF-Gap'].sum()
+    DCSUMM=DCGapCheck[DCGapCheck['BF-Gap']<0]
+    DCSUM=DCSUMM.agg({'BF-Gap':'sum'})
+    DCSUM=DCSUM.sum()
     DCSUM
     ########################
     DCMove=DCGapCheck['DC-Move'].sum()
-    BFGap=DCGapCheck['BF-Gap'].sum()
+    BFGap=DCSUM
     ######################## Table-BF #########################################
     st.write('BF Gap/Loss')
     DCSUMDATA = {
@@ -493,15 +507,24 @@ if Process=='Movement':
     ################# To Excel ############################
     name='DC-Movement @ Week-'
     week=str(Winput)
-    filename=name+week+'.xlsx'
+    Customer=Customer
+    filename=Customer+name+week+'.xlsx'
     path=r'C:\Users\utaie\Desktop\Costing\Movement-2023\Weekly-Movement-2024\\'
     DCGapCheck.to_excel(path+filename)
 ################# FN ##################
+if Process=='Movement-FN':
+    st.subheader('Movement FN-Gap Analysis')
+    st.write('FN Weekly Data Summarize @week',Winput)
     FNData['FN-Move']=(FNData['Total 1']+FNData['Total 2'])-FNData['FNEnd']
     SBProd=SBData[['Part_No','Prod-Pcs']]
     FNMove=FNData[['Part_No','FN-Move']]
     FNGapCheck=pd.merge(SBProd,FNMove,on='Part_No',how='left')
-    FNGapCheck['FN-Gap']=FNGapCheck['Prod-Pcs']-FNGapCheck['FN-Move']
+    #######################
+    if not FNGapCheck[FNGapCheck['Part_No']=='1050B375'].empty:
+        FNGapCheck['FN-Gap']=FNGapCheck['Prod-Pcs']-0 
+    else:
+        FNGapCheck['FN-Gap']=FNGapCheck['Prod-Pcs']-FNGapCheck['FN-Move']
+    ######################
     st.write('---')
     st.write('Gap FN Details')
     FNGapCheck=FNGapCheck[(FNGapCheck['FN-Move']!=0) | (FNGapCheck['Prod-Pcs']!=0)].reset_index(drop=True)
@@ -511,10 +534,16 @@ if Process=='Movement':
     formatted_df = format_dataframe_columns(FNGapCheck)
     st.dataframe(formatted_df)
     ####################
-    FNSUM=FNGapCheck['FN-Gap'].sum()
+    FNSUMM=FNGapCheck[FNGapCheck['FN-Gap']<0]
+    FNSUM=FNSUMM.agg({'FN-Gap':'sum'})
+    FNSUM=FNSUM.sum()
     FNSUM
+    ########################
+    FNMove=FNGapCheck['FN-Move'].sum()
+    BFGap=FNSUM
     #######################
     FNMove=FNGapCheck['FN-Move'].sum()
+    #######################
     FNGap=FNSUM
     ###################### Teble FN ###############
     st.write('BS Gap/Loss')
@@ -531,10 +560,14 @@ if Process=='Movement':
     ################# To Excel ############################
     name='FN-Movement @ Week-'
     week=str(Winput)
-    filename=name+week+'.xlsx'
+    Customer=Customer
+    filename=Customer+name+week+'.xlsx'
     path=r'C:\Users\utaie\Desktop\Costing\Movement-2023\Weekly-Movement-2024\\'
     FNGapCheck.to_excel(path+filename)
 ################ SB ###################################
+if Process=='Movement-SB':
+    st.subheader('Movement SB-Gap Analysis')
+    st.write('SB Weekly Data Summarize @week',Winput)
     SBData['SB-Move']=(SBData['Total.1']-SBData['SBEnd'])
     MCData['MC-Move']=(MCData['Total.3']-MCData['MCEnd'])
     QCRM=QCData[QCData['Type'].str.contains('RM')]
@@ -584,12 +617,12 @@ if Process=='Movement':
     ###################
     formatted_df = format_dataframe_columns(SBGapCheck)
     st.dataframe(formatted_df)
-    ####################
-    SBSUM=SBGapCheck['SB-TT-Gap'].sum()
-    SBSUM
-    # SBGapCheck
     ####################################
     SBMove=(SBGapCheck['SB-Move-T5'].sum())+(SBGapCheck['SB-Move-MC'].sum())+(SBGapCheck['SB-Move-RM'].sum())
+    SBSUMM=SBGapCheck[SBGapCheck['SB-TT-Gap']<0]
+    SBSUM=SBSUMM.agg({'SB-TT-Gap':'sum'})
+    SBSUM=SBSUM.sum()
+    SBSUM
     SBGap=SBSUM
     ############### Teble BS #################
     st.write('BS Summariz')
@@ -602,14 +635,20 @@ if Process=='Movement':
     SBSUMDATA['Quantity'] = SBSUMDATA['Quantity'].map('{:,.0f}'.format)
     st.table(SBSUMDATA )
     st.write('BM Gap/Loss')
-    
     ################# To Excel ############################
     name='SB-Movement @ Week-'
     week=str(Winput)
-    filename=name+week+'.xlsx'
+    Customer=Customer
+    filename=Customer+name+week+'.xlsx'
     path=r'C:\Users\utaie\Desktop\Costing\Movement-2023\Weekly-Movement-2024\\'
     SBGapCheck.to_excel(path+filename)
-################# MC ####################    
+################# MC ####################
+QCMC=QCData[QCData['Type'].str.contains('MC')]
+SBData['SB-Move']=(SBData['Total.1']-SBData['SBEnd'])
+MCData['MC-Move']=(MCData['Total.3']-MCData['MCEnd'])
+if Process=='Movement-MC':
+    st.subheader('Movement MC-Gap Analysis')
+    st.write('MC Weekly Data Summarize @week',Winput)  
     QCMC=QCMC[['Part_No','Prod-Pcs']]
     QCMC.rename(columns={'Prod-Pcs':'QCMC-Pcs'},inplace=True)
     MCMove=MCData[['Part_No','MC-Move']]
@@ -622,9 +661,14 @@ if Process=='Movement':
     ###################
     formatted_df = format_dataframe_columns(MCGapCheck)
     st.dataframe(formatted_df)
-    ###################
-    MCSUM=MCGapCheck['MC-Gap'].sum()
+    ####################
+    MCSUMM=MCGapCheck[MCGapCheck['MC-Gap']<0]
+    MCSUM=MCSUMM.agg({'MC-Gap':'sum'})
+    MCSUM=MCSUM.sum()
     MCSUM
+    ########################
+    MCMove=MCGapCheck['MC-Move'].sum()
+    MCGap=MCSUM
     ##########################
     MCMove=MCGapCheck['MC-Move'].sum()
     ###################### Teble MC ###############
@@ -632,7 +676,7 @@ if Process=='Movement':
     MCSUMDATA = {
         'Operation': ['MC Movement','QC Production','MC GAP/loss'],
         'Type': ['Pcs','Pcs','Pcs'],
-        'Quantity': [MCMove,QCPcs,MCSUM]}
+        'Quantity': [MCMove,QCPcs,MCGap]}
     MCSUMDATA  = pd.DataFrame(MCSUMDATA)
     MCSUMDATA .index += 1
     MCSUMDATA['Quantity'] = MCSUMDATA['Quantity'].map('{:,.0f}'.format)
@@ -640,10 +684,14 @@ if Process=='Movement':
     ################# To Excel ############################
     name='MC-Movement @ Week-'
     week=str(Winput)
-    filename=name+week+'.xlsx'
+    Customer=Customer
+    filename=Customer+name+week+'.xlsx'
     path=r'C:\Users\utaie\Desktop\Costing\Movement-2023\Weekly-Movement-2024\\'
     MCGapCheck.to_excel(path+filename)
 ################# QC #####################################
+if Process=='Movement-QC':
+    st.subheader('Movement QC-Gap Analysis')
+    st.write('QC Weekly Data Summarize @week',Winput)
     QCData['QC-Move']=QCData['Total.4']-QCData['QCEnd']   
     Sales=QCData[['Part_No','ACT.7']]
     Sales.rename(columns={'ACT.7':'Sales-Pcs'},inplace=True)
@@ -656,14 +704,18 @@ if Process=='Movement':
     # QCGapCheck
     QCGapCheck.index=QCGapCheck.index+1
     QCGapCheck
-    QCSUM=QCGapCheck['QC-Gap'].sum()
+    ####################
+    QCSUMM=QCGapCheck[QCGapCheck['QC-Gap']<0]
+    QCSUM=QCSUMM.agg({'QC-Gap':'sum'})
+    QCSUM=QCSUM.sum()
     QCSUM
     ########################
     QCMove=QCGapCheck['QC-Move'].sum()
+    QCGap=QCSUM
     ################## Table BF ####################################
     st.write('FG Summariz')
     SalePcs=QCData['ACT.7'].sum()
-    QCGap=SalePcs-QCMove
+    # QCGap=SalePcs-QCMove
     QCSUMDATA = {
         'Operation': ['QC Movement','Sales-Pcs','FG GAP/loss'],
         'Type': ['Pcs','Pcs','Pcs'],
@@ -676,6 +728,92 @@ if Process=='Movement':
     ################# To Excel ############################
     name='QC-Movement @ Week-'
     week=str(Winput)
-    filename=name+week+'.xlsx'
+    Customer=Customer
+    filename=Customer+name+week+'.xlsx'
     path=r'C:\Users\utaie\Desktop\Costing\Movement-2023\Weekly-Movement-2024\\'
     QCGapCheck.to_excel(path+filename)
+# ########################### Graph NG #########################################
+# if Process=='Movement-Chart-Summarize':
+#     ######## Read File DC ###################
+#     name='DC-Movement @ Week-'
+#     week=str(Winput)
+#     Customer=Customer
+#     filename=Customer+name+week+'.xlsx'
+#     path=r'C:\Users\utaie\Desktop\Costing\Movement-2023\Weekly-Movement-2024\\'
+#     ReadDC=pd.read_excel(path+filename)
+#     ####################
+#     DCSUMM=ReadDC[ReadDC['BF-Gap']<0]
+#     DCSUM=DCSUMM.agg({'BF-Gap':'sum'})
+#     DCSUM=DCSUM.sum()
+#     ########################
+#     DCGap=DCSUM
+#     ######## Read File FN ###################
+#     name='FN-Movement @ Week-'
+#     week=str(Winput)
+#     Customer=Customer
+#     filename=Customer+name+week+'.xlsx'
+#     path=r'C:\Users\utaie\Desktop\Costing\Movement-2023\Weekly-Movement-2024\\'
+#     ReadFN=pd.read_excel(path+filename)
+#     ####################
+#     FNSUMM=ReadFN[ReadFN['FN-Gap']<0]
+#     FNSUM=FNSUMM.agg({'FN-Gap':'sum'})
+#     FNSUM=FNSUM.sum()
+#     ########################
+#     FNGap=FNSUM
+#     ######## Read File SB ###################
+#     name='SB-Movement @ Week-'
+#     week=str(Winput)
+#     Customer=Customer
+#     filename=Customer+name+week+'.xlsx'
+#     path=r'C:\Users\utaie\Desktop\Costing\Movement-2023\Weekly-Movement-2024\\'
+#     ReadSB=pd.read_excel(path+filename)
+#     ReadSB['SB-Gap']=ReadSB['SB-TT-Gap']
+#     ####################
+#     SBSUMM=ReadSB[ReadSB['SB-Gap']<0]
+#     SBSUM=SBSUMM.agg({'SB-Gap':'sum'})
+#     SBSUM=SBSUM.sum()
+#     ########################
+#     SBGap=SBSUM
+#     ######## Read File MC ###################
+#     name='MC-Movement @ Week-'
+#     week=str(Winput)
+#     Customer=Customer
+#     filename=Customer+name+week+'.xlsx'
+#     path=r'C:\Users\utaie\Desktop\Costing\Movement-2023\Weekly-Movement-2024\\'
+#     ReadMC=pd.read_excel(path+filename)
+#     ####################
+#     MCSUMM=ReadMC[ReadMC['MC-Gap']<0]
+#     MCSUM=MCSUMM.agg({'MC-Gap':'sum'})
+#     MCSUM=MCSUM.sum()
+#     ########################
+#     MCGap=MCSUM
+#     ######## Read File QC ###################
+#     name='QC-Movement @ Week-'
+#     week=str(Winput)
+#     Customer=Customer
+#     filename=Customer+name+week+'.xlsx'
+#     path=r'C:\Users\utaie\Desktop\Costing\Movement-2023\Weekly-Movement-2024\\'
+#     ReadQC=pd.read_excel(path+filename)
+#     ####################
+#     QCSUMM=ReadQC[ReadQC['QC-Gap']<0]
+#     QCSUM=QCSUMM.agg({'QC-Gap':'sum'})
+#     QCSUM=QCSUM.sum()
+#     ########################
+#     QCGap=QCSUM
+#     ########################
+#     st.subheader('Movement Chart Gap Analysis')
+#     st.write('Weekly Data Summarize @week',Winput)
+#     categories = ['TT-Gap','DC-Gap','FN-Gap', 'SB-GAP', 'MC-Gap', 'QC-Gap']
+#     TTGap=DCSUM+FNGap+SBGap+MCGap+QCGap
+#     values = [TTGap,DCSUM,FNGap, SBGap, MCGap, QCSUM]
+#     formatted_values = [f'{value:,.2f}' for value in values]
+#     fig = go.Figure()
+#     fig.add_trace(go.Bar(x=categories, y=values, marker_color='skyblue', text=formatted_values, textposition='auto'))
+#     fig.update_layout(
+#     title={
+#         'text': 'Gap/Loss Metrics'},
+#     xaxis_title='',
+#     yaxis_title='',
+#     height=500,width=650,font=dict(size=12))
+#     st.plotly_chart(fig)
+#     st.write("---")

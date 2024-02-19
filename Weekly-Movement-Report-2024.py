@@ -609,7 +609,8 @@ if Process=='Movement-SB':
     SBGapCheck.rename(columns={'Prod-Pcs':'Prod-MC-Pcs'},inplace=True)
     SBGapCheck['SB-TT-Gap']=SBGapCheck['SB-Gap-MC']+SBGapCheck['SB-Gap-RM']
     SBGapCheck.index=SBGapCheck.index+1
-    
+    subset_columns = ['Part_No', 'SB-TT-Gap']
+    SBGapCheck.drop_duplicates(subset=subset_columns, inplace=True)
     SBGapCheck=SBGapCheck[['Part_No','SB-Move-T5','SB-Move-MC','SB-Move-RM','Prod-T5-Pcs','Prod-MC-Pcs','QCRM-Pcs','SB-Gap-T5','SB-Gap-MC','SB-Gap-RM','SB-TT-Gap']]
     
     ###################
@@ -729,88 +730,3 @@ if Process=='Movement-QC':
     filename=Customer+name+week+'.xlsx'
     path=r'C:\Users\utaie\Desktop\Costing\Movement-2023\Weekly-Movement-2024\\'
     QCGapCheck.to_excel(path+filename)
-# ########################### Graph NG #########################################
-# if Process=='Movement-Chart-Summarize':
-#     ######## Read File DC ###################
-#     name='DC-Movement @ Week-'
-#     week=str(Winput)
-#     Customer=Customer
-#     filename=Customer+name+week+'.xlsx'
-#     path=r'C:\Users\utaie\Desktop\Costing\Movement-2023\Weekly-Movement-2024\\'
-#     ReadDC=pd.read_excel(path+filename)
-#     ####################
-#     DCSUMM=ReadDC[ReadDC['BF-Gap']<0]
-#     DCSUM=DCSUMM.agg({'BF-Gap':'sum'})
-#     DCSUM=DCSUM.sum()
-#     ########################
-#     DCGap=DCSUM
-#     ######## Read File FN ###################
-#     name='FN-Movement @ Week-'
-#     week=str(Winput)
-#     Customer=Customer
-#     filename=Customer+name+week+'.xlsx'
-#     path=r'C:\Users\utaie\Desktop\Costing\Movement-2023\Weekly-Movement-2024\\'
-#     ReadFN=pd.read_excel(path+filename)
-#     ####################
-#     FNSUMM=ReadFN[ReadFN['FN-Gap']<0]
-#     FNSUM=FNSUMM.agg({'FN-Gap':'sum'})
-#     FNSUM=FNSUM.sum()
-#     ########################
-#     FNGap=FNSUM
-#     ######## Read File SB ###################
-#     name='SB-Movement @ Week-'
-#     week=str(Winput)
-#     Customer=Customer
-#     filename=Customer+name+week+'.xlsx'
-#     path=r'C:\Users\utaie\Desktop\Costing\Movement-2023\Weekly-Movement-2024\\'
-#     ReadSB=pd.read_excel(path+filename)
-#     ReadSB['SB-Gap']=ReadSB['SB-TT-Gap']
-#     ####################
-#     SBSUMM=ReadSB[ReadSB['SB-Gap']<0]
-#     SBSUM=SBSUMM.agg({'SB-Gap':'sum'})
-#     SBSUM=SBSUM.sum()
-#     ########################
-#     SBGap=SBSUM
-#     ######## Read File MC ###################
-#     name='MC-Movement @ Week-'
-#     week=str(Winput)
-#     Customer=Customer
-#     filename=Customer+name+week+'.xlsx'
-#     path=r'C:\Users\utaie\Desktop\Costing\Movement-2023\Weekly-Movement-2024\\'
-#     ReadMC=pd.read_excel(path+filename)
-#     ####################
-#     MCSUMM=ReadMC[ReadMC['MC-Gap']<0]
-#     MCSUM=MCSUMM.agg({'MC-Gap':'sum'})
-#     MCSUM=MCSUM.sum()
-#     ########################
-#     MCGap=MCSUM
-#     ######## Read File QC ###################
-#     name='QC-Movement @ Week-'
-#     week=str(Winput)
-#     Customer=Customer
-#     filename=Customer+name+week+'.xlsx'
-#     path=r'C:\Users\utaie\Desktop\Costing\Movement-2023\Weekly-Movement-2024\\'
-#     ReadQC=pd.read_excel(path+filename)
-#     ####################
-#     QCSUMM=ReadQC[ReadQC['QC-Gap']<0]
-#     QCSUM=QCSUMM.agg({'QC-Gap':'sum'})
-#     QCSUM=QCSUM.sum()
-#     ########################
-#     QCGap=QCSUM
-#     ########################
-#     st.subheader('Movement Chart Gap Analysis')
-#     st.write('Weekly Data Summarize @week',Winput)
-#     categories = ['TT-Gap','DC-Gap','FN-Gap', 'SB-GAP', 'MC-Gap', 'QC-Gap']
-#     TTGap=DCSUM+FNGap+SBGap+MCGap+QCGap
-#     values = [TTGap,DCSUM,FNGap, SBGap, MCGap, QCSUM]
-#     formatted_values = [f'{value:,.2f}' for value in values]
-#     fig = go.Figure()
-#     fig.add_trace(go.Bar(x=categories, y=values, marker_color='skyblue', text=formatted_values, textposition='auto'))
-#     fig.update_layout(
-#     title={
-#         'text': 'Gap/Loss Metrics'},
-#     xaxis_title='',
-#     yaxis_title='',
-#     height=500,width=650,font=dict(size=12))
-#     st.plotly_chart(fig)
-#     st.write("---")
